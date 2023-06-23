@@ -1,0 +1,114 @@
+import requests
+
+import random 
+
+from bs4 import BeautifulSoup as B
+
+import telebot
+
+from telebot import types
+
+from enum import Enum
+
+token = '6160035381:AAGpy3G81qUGqu2SJPDX4Zpk_tCc_k5OdaE'
+api_token = '9629d19d3f7e42f691e61ba9f3cc7ca7'
+
+url_Z = "https://sinoptik.ua/%D0%BF%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0-%D0%B6%D0%B8%D1%82%D0%BE%D0%BC%D0%B8%D1%80"
+url_K = "https://sinoptik.ua/%D0%BF%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0-%D0%BA%D0%B8%D0%B5%D0%B2"
+url_D = "https://sinoptik.ua/%D0%BF%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0-%D0%B4%D0%BE%D1%80%D1%82%D0%BC%D1%83%D0%BD%D0%B4"
+url_B = "https://sinoptik.ua/%D0%BF%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0-%D0%B1%D0%B5%D1%80%D0%B4%D0%B8%D1%87%D0%B5%D0%B2"
+
+
+
+answer_reply = ['Запрос выполнен','Загружаю Сер','Легче лёгкого','Есть','Исполнено','Нет проблем','Всё что удалось найти']
+
+
+bot=telebot.TeleBot(token)
+
+class BotState(Enum):
+    START = 1
+    AWAITING_CITY = 2
+
+current_state = BotState.START
+user_input = None
+
+@bot.message_handler(commands= ['start'])
+
+def greetings(message):
+    bot.send_message(message.chat.id,"Привет Босс ✌ ")
+
+
+@bot.message_handler(commands=['button'])
+def first_button(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    first_item = types.KeyboardButton("Погода Дортмунд")
+    second_item = types.KeyboardButton("Погода Киев")
+    third_item = types.KeyboardButton("Погода Бердичев")
+    foth_item = types.KeyboardButton("Погода Житомир")
+    fifth_item = types.KeyboardButton("Выбрать город вручную")
+
+    markup.add(first_item, second_item, third_item, foth_item, fifth_item) 
+    bot.send_message(message.chat.id,'Добро пожаловать. Выберите что вам надо',reply_markup=markup)
+    
+@bot.message_handler(content_types='text')
+def send_message(message):
+    global current_state, user_input
+    r_answers = random.choice(answer_reply)
+    if message.text == 'Погода Житомир':
+        bot.reply_to(message, r_answers)
+        r = requests.get(url_Z)
+        soup = B(r.text, 'html.parser')
+        sourse = soup.find('div', class_='main loaded')
+        sourse_s = soup.find('div', class_='description')
+        bot.send_message(message.chat.id, text=sourse.text)
+        bot.send_message(message.chat.id, text=sourse_s.text)
+    elif message.text == 'Погода Дортмунд':
+        bot.reply_to(message, r_answers)
+        r = requests.get(url_D)
+        soup = B(r.text, 'html.parser')
+        sourse = soup.find('div', class_='main loaded')
+        sourse_s = soup.find('div', class_='description')
+        bot.send_message(message.chat.id, text=sourse.text)
+        bot.send_message(message.chat.id, text=sourse_s.text)
+    elif message.text == 'Погода Киев':
+        bot.reply_to(message, r_answers)
+        r = requests.get(url_K)
+        soup = B(r.text, 'html.parser')
+        sourse = soup.find('div', class_='main loaded')
+        sourse_s = soup.find('div', class_='description')
+        bot.send_message(message.chat.id, text=sourse.text)
+        bot.send_message(message.chat.id, text=sourse_s.text)
+    elif message.text == 'Погода Бердичев':
+        bot.reply_to(message, r_answers)
+        r = requests.get(url_B)
+        soup = B(r.text, 'html.parser')
+        sourse = soup.find('div', class_='main loaded')
+        sourse_s = soup.find('div', class_='description')
+        bot.send_message(message.chat.id, text=sourse.text)
+        bot.send_message(message.chat.id, text=sourse_s.text)
+    elif message.text == 'Выбрать город вручную':
+        bot.reply_to(message, r_answers)
+        current_state = BotState.AWAITING_CITY
+        bot.send_message(message.chat.id, "Введите название города:")
+    elif current_state == BotState.AWAITING_CITY:
+        current_state = BotState.START
+        user_input = message.text
+        url_api = f"http://api.openweathermap.org/data/2.5/weather?q={user_input}&appid={api_token}"
+        response = requests.get(url_api)
+        data = response.json()
+
+        if response.status_code == 200:
+            temperature = data['main']['temp']
+            temperature_celsius = round(temperature - 273.15, 1)
+            description = data['weather'][0]['description']
+            bot.send_message(message.chat.id, f"Текущая погода в городе {user_input}:")
+            bot.send_message(message.chat.id, f"Температура: {temperature_celsius} °C")
+            bot.send_message(message.chat.id, f"Описание: {description}")
+        else:
+            bot.send_message(message.chat.id, "Данные отсутствуют")
+  
+
+
+
+
+bot.infinity_polling()
