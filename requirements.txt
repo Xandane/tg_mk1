@@ -3,3 +3,4 @@ beautifulsoup4
 telebot
 enum34
 gunicorn
+web: gunicorn  your_application.wsgi
