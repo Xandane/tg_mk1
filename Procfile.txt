@@ -1,1 +1,1 @@
-web: gunicorn  your_application.wsgi
+worker: python  Tg_test.py
