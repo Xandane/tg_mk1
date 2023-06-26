@@ -1,0 +1,1 @@
+web: gunicorn  Tg_test.wsgi
