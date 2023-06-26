@@ -2,5 +2,5 @@ requests
 beautifulsoup4
 telebot
 enum34
-gunicorn Tg_test.wsgi
+gunicorn 
 
