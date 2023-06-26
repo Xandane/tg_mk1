@@ -3,5 +3,4 @@ beautifulsoup4
 telebot
 enum34
 gunicorn
-your_application
-
+Tg_test
