@@ -23,7 +23,7 @@ url_B = "https://sinoptik.ua/%D0%BF%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0-%D0%B1%D0%B5%D
 answer_reply = ['Запрос выполнен','Загружаю Сер','Легче лёгкого','Есть','Исполнено','Нет проблем','Всё что удалось найти']
 
 
-bot=telebot.TeleBot(token)
+bot = telebot.TeleBot(token)
 
 class BotState(Enum):
     START = 1
@@ -32,11 +32,9 @@ class BotState(Enum):
 current_state = BotState.START
 user_input = None
 
-@bot.message_handler(commands= ['start'])
-
+@bot.message_handler(commands=['start'])
 def greetings(message):
-    bot.send_message(message.chat.id,"Привет Босс ✌ ")
-
+    bot.send_message(message.chat.id, "Привет Босс ✌ ")
 
 @bot.message_handler(commands=['button'])
 def first_button(message):
@@ -47,49 +45,29 @@ def first_button(message):
     foth_item = types.KeyboardButton("Погода Житомир")
     fifth_item = types.KeyboardButton("Выбрать город вручную")
 
-    markup.add(first_item, second_item, third_item, foth_item, fifth_item) 
-    bot.send_message(message.chat.id,'Добро пожаловать. Выберите что вам надо',reply_markup=markup)
-    
-@bot.message_handler(content_types='text')
+    markup.add(first_item, second_item, third_item, foth_item, fifth_item)
+    bot.send_message(message.chat.id, 'Добро пожаловать. Выберите что вам надо', reply_markup=markup)
+
+@bot.message_handler(content_types=['text'])
 def send_message(message):
     global current_state, user_input
-    r_answers = random.choice(answer_reply)
+    r_answer = random.choice(answer_reply)  
     if message.text == 'Погода Житомир':
-        bot.reply_to(message, r_answers)
-        r = requests.get(url_Z)
-        soup = B(r.text, 'html.parser')
-        sourse = soup.find('div', class_='main loaded')
-        sourse_s = soup.find('div', class_='description')
-        bot.send_message(message.chat.id, text=sourse.text)
-        bot.send_message(message.chat.id, text=sourse_s.text)
+        drys(url_Z, message, r_answer)  
+
     elif message.text == 'Погода Дортмунд':
-        bot.reply_to(message, r_answers)
-        r = requests.get(url_D)
-        soup = B(r.text, 'html.parser')
-        sourse = soup.find('div', class_='main loaded')
-        sourse_s = soup.find('div', class_='description')
-        bot.send_message(message.chat.id, text=sourse.text)
-        bot.send_message(message.chat.id, text=sourse_s.text)
+        drys(url_D, message, r_answer)  
+
     elif message.text == 'Погода Киев':
-        bot.reply_to(message, r_answers)
-        r = requests.get(url_K)
-        soup = B(r.text, 'html.parser')
-        sourse = soup.find('div', class_='main loaded')
-        sourse_s = soup.find('div', class_='description')
-        bot.send_message(message.chat.id, text=sourse.text)
-        bot.send_message(message.chat.id, text=sourse_s.text)
+        drys(url_K, message, r_answer)  
+
     elif message.text == 'Погода Бердичев':
-        bot.reply_to(message, r_answers)
-        r = requests.get(url_B)
-        soup = B(r.text, 'html.parser')
-        sourse = soup.find('div', class_='main loaded')
-        sourse_s = soup.find('div', class_='description')
-        bot.send_message(message.chat.id, text=sourse.text)
-        bot.send_message(message.chat.id, text=sourse_s.text)
+        drys(url_B, message, r_answer)  
+
     elif message.text == 'Выбрать город вручную':
-        bot.reply_to(message, r_answers)
         current_state = BotState.AWAITING_CITY
         bot.send_message(message.chat.id, "Введите название города:")
+
     elif current_state == BotState.AWAITING_CITY:
         current_state = BotState.START
         user_input = message.text
@@ -106,9 +84,14 @@ def send_message(message):
             bot.send_message(message.chat.id, f"Описание: {description}")
         else:
             bot.send_message(message.chat.id, "Данные отсутствуют")
-  
 
-
-
+def drys(url, message, r_answer):
+    bot.reply_to(message, r_answer) 
+    r = requests.get(url)
+    soup = B(r.text, 'html.parser')
+    sourse = soup.find('div', class_='main loaded')
+    sourse_s = soup.find('div', class_='description')
+    bot.send_message(message.chat.id, text=sourse.text)
+    bot.send_message(message.chat.id, text=sourse_s.text)
 
 bot.infinity_polling()
